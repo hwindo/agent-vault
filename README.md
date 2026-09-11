@@ -37,7 +37,7 @@ Loads when a session touches the vault: reading notes, asking what is currently 
 | `/now [thread]` | Reconcile the focus board against repo reality, report the drift with evidence, then work one thread and rewrite the rows that changed. |
 | `/retire <thread>` | Verify a thread's outcome, record it durably in the project note or ADR, remove its `NOW.md` row. Stops if an outcome is unevidenced. |
 
-Claude Code and pi expose both as slash commands. Codex ships the skill; ask it to run the focus loop in prose, or add the command files to `~/.codex/prompts/`.
+Claude Code and pi expose both as slash commands. Codex ships the skill; there, ask for the focus loop in prose.
 
 ## Layout
 
