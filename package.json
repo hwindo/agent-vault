@@ -1,10 +1,10 @@
 {
-  "name": "pi-vault",
+  "name": "agent-vault",
   "version": "0.1.0",
-  "description": "Pi package for an Obsidian knowledge vault: a vault navigation skill and focus-board prompt templates.",
-  "keywords": ["pi-package", "obsidian", "vault", "skills", "prompts"],
+  "description": "Obsidian knowledge vault workflow for pi, Claude Code, and Codex: a vault navigation skill and focus-board commands.",
+  "keywords": ["pi-package", "obsidian", "vault", "agent-skills"],
   "pi": {
     "skills": ["./skills"],
-    "prompts": ["./prompts"]
+    "prompts": ["./commands"]
   }
 }
