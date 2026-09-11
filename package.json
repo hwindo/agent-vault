@@ -1,0 +1,10 @@
+{
+  "name": "pi-vault",
+  "version": "0.1.0",
+  "description": "Pi package for an Obsidian knowledge vault: a vault navigation skill and focus-board prompt templates.",
+  "keywords": ["pi-package", "obsidian", "vault", "skills", "prompts"],
+  "pi": {
+    "skills": ["./skills"],
+    "prompts": ["./prompts"]
+  }
+}
