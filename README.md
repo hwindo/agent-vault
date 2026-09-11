@@ -104,6 +104,76 @@ Blocking findings only, each with file and line.
 4. **Review** — the reviewer receives the plan path and the sha range, and appends `## Review`.
 5. **Close** — a blocking finding returns to step 2. Once clean, the outcome is recorded by the vault rules: the plan file stays in the repository, the vault gets the rationale, and any active `NOW.md` row is updated or retired.
 
+## Worked examples
+
+### The delegation loop
+
+Task: *"The outbound export worker loses jobs when the provider times out. Fix it."*
+
+**1. Invoke the loop and choose the actors.**
+
+```bash
+/delegate plan=claude:opus implement=pi review=codex:sol outbound export retries
+```
+
+Claude Code and Codex start in sibling panes, so this session stays usable:
+
+```bash
+herdr pane split --current --direction right --cwd "$PWD" --no-focus   # → w1:p7
+herdr agent start planner --kind claude --pane w1:p7 -- --model opus
+herdr agent prompt planner "Write docs/plans/outbound-export-retries.md per the plan contract." --wait --timeout 900000
+```
+
+**2. The planner writes the plan and no code:**
+
+```markdown
+# Outbound export retries
+
+Status: Draft — retry budget still open
+
+## Question
+Does a provider timeout discard the job, and what budget should a retry get?
+
+## Evidence
+- `src/outbound/outbound.processor.ts:88` — the catch logs and returns, so Bull
+  records the job as complete
+- `docs/plans/qianyi-reliability.md` — the shared classifier calls timeouts transient
+
+## Steps
+1. Rethrow transient provider failures so Bull retries — acceptance: a unit test
+   fails before the change and passes after
+2. Cap the budget at 3 attempts with backoff — acceptance: no test exceeds 3 runs
+```
+
+**3. Implement in this session** (`implement=pi`), which appends:
+
+```markdown
+## Result
+- `src/outbound/outbound.processor.ts` — classify, rethrow, discard on permanent
+- `src/outbound/outbound.processor.spec.ts` — 4 tests, passing
+- Commits: `a1b2c3d`, `d4e5f6a`
+- Could not verify: the retry path against real provider timings
+```
+
+**4. Verify before spending a reviewer.** Read the diff, rerun the suite, then hand Codex the sha range:
+
+```bash
+herdr agent start reviewer --kind codex --pane w1:p9 -- -m gpt-5.6-sol
+herdr agent prompt reviewer "Review a1b2c3d..d4e5f6a against docs/plans/outbound-export-retries.md. Append ## Review with blocking findings only." --wait
+```
+
+**5. Close.** With no blocking findings, the plan stays in the repository, the vault records that retry classification became shared policy, and the affected `NOW.md` row gets its next outcome instead of its old one.
+
+### Focus-board reconciliation (`/now`)
+
+The reconciliation reports drift as a table before touching anything:
+
+| Row | Claims | Found | Verdict |
+|---|---|---|---|
+| Voucher release | production deploy unevidenced | Railway deployment `900fcbc4` SUCCESS on `main@2d26e93` | done |
+| List UX | review frontend #309 | #309 merged 2026-09-09; backend #107 still open | stale |
+| `staging` divergence | 4 files re-landed | `nixpacks.toml`, `.gitignore`, `ListingController` still differ | holds |
+
 ## The vault skill
 
 Loads when a session reads vault notes, asks what is in progress, records a decision or lesson, or works inside the vault.
