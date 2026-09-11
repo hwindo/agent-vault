@@ -1,0 +1,30 @@
+---
+description: Run plan → implement → review with the actors you choose, then verify and close the loop
+argument-hint: "[plan=<actor> implement=<actor> review=<actor>] <task>"
+---
+Run the delegation loop for: ${@:-the task described above}
+
+## Choose the actors
+
+Parse `plan=`, `implement=`, `review=` from the arguments. Omit a role and ask for it before starting — never infer it from the task size.
+
+| Actor | Runs as |
+|---|---|
+| `codex:sol`, `codex:luna` | Codex in a sibling herdr pane: `--kind codex -- -m <model>` |
+| `claude:opus`, `claude:sonnet`, `claude:haiku` | Claude Code in a sibling herdr pane: `--kind claude -- --model <alias>` |
+| `pi` | this session |
+| `pi:<model>` | a pi subagent on that model, if the subagent extension is installed; otherwise say so and offer to install it |
+
+House defaults: **plan `claude:opus` · implement `pi` · review `codex:sol`**. Utility work — summarising, renaming, extraction, boilerplate, commit messages — goes to `codex:luna`, `claude:haiku`, or local `qwen3:8b`, and never occupies a loop role.
+
+## The loop
+
+1. **Plan** — the planner writes `docs/plans/<slug>.md`: the question, evidence inspected, working assumptions, rejected paths, the decision still needed, and a bounded step list where each step names its acceptance check. It writes no code.
+2. **Implement** — hand the implementer only the plan path, plus the contract: commit small and feature-scoped, never push, then append `## Result` to the plan — what changed, commit shas, tests run, and what it could not do.
+3. **Verify** — check the Result against the tree yourself before spending a reviewer: `git log`, the diff, and rerun the tests. A delegate's claim is not evidence.
+4. **Review** — hand the reviewer the plan path and the sha range. It appends `## Review`: blocking findings only, each with file and line.
+5. **Close** — a blocking finding returns to step 2. Once clean, record the outcome by the `vault` rules: the plan file is the repository's copy, the vault gets the rationale, and any active `NOW.md` row is updated or retired.
+
+## Delegating
+
+Start each delegate in a sibling pane with `--no-focus` so this session stays usable, and give it a unique name. Read its work from the plan file, not the pane: long output can leave the alternate screen, and scrollback will not bring it back. Check `herdr agent list` before starting, so two agents are not handed the same file.

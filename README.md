@@ -30,12 +30,15 @@ Loads when a session touches the vault: reading notes, asking what is currently 
 - **Verify before acting** — a focus row is a claim, not a fact; check it against the source it names before trusting it.
 - **Editing rules** — preserve frontmatter, wikilinks, embeds, tags, callouts, and block IDs; link rather than copy.
 
-### Commands: `/now` and `/retire`
+### Commands: `/now`, `/retire`, `/delegate`
 
 | Command | What it does |
 |---|---|
 | `/now [thread]` | Reconcile the focus board against repo reality, report the drift with evidence, then work one thread and rewrite the rows that changed. |
 | `/retire <thread>` | Verify a thread's outcome, record it durably in the project note or ADR, remove its `NOW.md` row. Stops if an outcome is unevidenced. |
+| `/delegate [plan=· implement=· review=] <task>` | Run the delegation loop: a planner writes `docs/plans/<slug>.md`, an implementer executes it and appends a `## Result`, you verify the claims, a reviewer appends a `## Review`, then the outcome is recorded. Actors are chosen per run. |
+
+House defaults for `/delegate`: **plan `claude:opus` · implement `pi` · review `codex:sol`**; utility work goes to `codex:luna`, `claude:haiku`, or local `qwen3:8b`. Any role can be reassigned per run, and an omitted role is asked for rather than inferred.
 
 Claude Code and pi expose both as slash commands. Codex ships the skill; there, ask for the focus loop in prose.
 
@@ -43,7 +46,7 @@ Claude Code and pi expose both as slash commands. Codex ships the skill; there, 
 
 ```
 ├── skills/vault/SKILL.md              # the skill (all three harnesses)
-├── commands/now.md, retire.md         # slash commands
+├── commands/now.md, retire.md, delegate.md   # slash commands
 ├── package.json                       # pi package manifest
 ├── .claude-plugin/                    # Claude Code plugin + marketplace
 ├── .codex-plugin/                     # Codex plugin
