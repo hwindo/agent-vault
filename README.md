@@ -1,60 +1,155 @@
 # agent-vault
 
-Obsidian knowledge vault workflow for coding agents. One repo, three harnesses: [pi](https://pi.dev), Claude Code, and Codex.
+A knowledge-vault workflow for coding agents — **pi**, **Claude Code**, and **Codex** — plus a delegation loop that splits a task into plan, implement, and review.
 
-The vault holds the **why** — intent, rejected options, unresolved questions, traps already paid for. The repository holds the **how**. This package teaches an agent to read the vault in the right order, route what it learns to the right note, and keep the focus board honest.
+The vault holds the **why**: intent, rejected options, unresolved questions, traps already paid for. The repository holds the **how**. This package teaches an agent to read the vault in the right order, keep its focus board honest, and hand work between models you choose per run.
 
 ## Install
 
 ```bash
 # pi
-pi install git:github.com/hwindo/agent-vault@v0.1.0
+pi install git:github.com/hwindo/agent-vault@v0.2.0
 
 # Claude Code
 claude plugin marketplace add hwindo/agent-vault
 claude plugin install agent-vault@agent-vault
 
 # Codex
-codex plugin marketplace add hwindo/agent-vault
+codex plugin marketplace add hwindo/agent-vault --ref v0.2.0
 codex plugin add agent-vault@agent-vault
 ```
 
-## Contents
+Restart the harness afterwards (Claude Code requires it).
 
-### Skill: `vault`
+## What you get
 
-Loads when a session touches the vault: reading notes, asking what is currently in progress, recording a decision or lesson, or working inside the vault directory.
+| Resource | Loads |
+|---|---|
+| `vault` skill | Automatically, when a session touches the vault |
+| `/now [thread]` | When you invoke it |
+| `/retire <thread>` | When you invoke it |
+| `/delegate [plan=· implement=· review=] <task>` | When you invoke it |
+
+Codex ships the skill; the three commands are Claude Code and pi slash commands. In Codex, describe what you want and the same instructions come from the skill.
+
+## Prerequisites
+
+- **Cross-harness roles need Herdr**, the terminal multiplexer these agents run in. Assigning a role to `claude:*` or `codex:*` starts that agent in a sibling Herdr pane, so the session must run inside Herdr (`HERDR_ENV=1`). Otherwise assign the roles to `pi` actors, which run in the current session.
+- `pi:<model>` roles need the shipped `subagent` extension for an isolated context; without it they run inline.
+- A vault layout described under [Configuration](#configuration).
+
+## Quick start
+
+```bash
+/now                       # reconcile the focus board, pick a thread
+/delegate plan=claude:opus implement=pi review=codex:sol add the export retry budget
+/retire Restock export safety
+```
+
+## Choosing actors
+
+Assign a role per run; an omitted role is **asked for**, never inferred from task size.
+
+```bash
+/delegate implement=pi:deepseek-v4-flash <task>          # reuse house defaults for plan and review
+/delegate plan=codex:sol implement=codex:sol review=claude:opus <task>
+```
+
+| Actor | Runs as |
+|---|---|
+| `codex:sol`, `codex:luna` | Codex in a sibling Herdr pane (`-m <model>`) |
+| `claude:opus`, `claude:sonnet`, `claude:haiku` | Claude Code in a sibling Herdr pane (`--model <alias>`) |
+| `pi` | This session |
+| `pi:<model>` | A pi subagent on that model, if the subagent extension is installed |
+
+**House defaults:** plan `claude:opus` · implement `pi` · review `codex:sol`.
+
+**Utility work** — summarising, renaming, extraction, boilerplate, commit messages — goes to `codex:luna`, `claude:haiku`, or a local model, and never occupies a loop role.
+
+## The plan file
+
+The handoff bus is `docs/plans/<slug>.md` in the repository being changed. Panes are for watching; anything that matters is written to this file, because a delegate's long output can leave the alternate screen and scrollback will not bring it back.
+
+```markdown
+# <Slug>
+
+Status: Draft — <what is still open>
+
+## Question
+What this work has to answer.
+
+## Evidence
+What was inspected, with paths and line numbers.
+
+## Assumptions and rejected paths
+What is being taken on faith, and what was considered and dropped.
+
+## Steps
+1. <step> — acceptance: <the check that proves it>
+
+## Result        ← appended by the implementer
+What changed, commit shas, tests run, what could not be done.
+
+## Review        ← appended by the reviewer
+Blocking findings only, each with file and line.
+```
+
+**Commit authority:** the implementer commits small and feature-scoped and **never pushes**, so the reviewer and the orchestrator can check the same sha range independently.
+
+## The loop
+
+1. **Plan** — the planner writes the plan file and writes no code.
+2. **Implement** — the implementer receives only the plan path, then appends `## Result`.
+3. **Verify** — the orchestrating session checks the Result against the tree (`git log`, the diff, rerun the tests) *before* spending a reviewer. A delegate's claim is not evidence.
+4. **Review** — the reviewer receives the plan path and the sha range, and appends `## Review`.
+5. **Close** — a blocking finding returns to step 2. Once clean, the outcome is recorded by the vault rules: the plan file stays in the repository, the vault gets the rationale, and any active `NOW.md` row is updated or retired.
+
+## The vault skill
+
+Loads when a session reads vault notes, asks what is in progress, records a decision or lesson, or works inside the vault.
 
 - **Read order** — `AI.md` → `NOW.md` → `Home.md` → project hub → smallest useful note.
-- **Routing** — where an artifact belongs: an ADR, `Inbox.md`, a `NOW.md` focus row, a project note, or a daily note.
-- **Verify before acting** — a focus row is a claim, not a fact; check it against the source it names before trusting it.
-- **Editing rules** — preserve frontmatter, wikilinks, embeds, tags, callouts, and block IDs; link rather than copy.
+- **Routing** — an ADR for a decision with rationale; `Inbox.md` for a loose thought; a `NOW.md` row for active work, a blocker, or a deadline; the project note or ADR for a durable outcome; a daily note only for a dated observation needing its own context.
+- **Verify before acting** — a focus row is a claim, not a fact; check it against the source it names.
+- **Editing rules** — preserve frontmatter, wikilinks, embeds, tags, callouts, and block IDs; link rather than copy; ask before deleting, bulk-renaming, or reorganising notes.
 
-### Commands: `/now`, `/retire`, `/delegate`
-
-| Command | What it does |
-|---|---|
-| `/now [thread]` | Reconcile the focus board against repo reality, report the drift with evidence, then work one thread and rewrite the rows that changed. |
-| `/retire <thread>` | Verify a thread's outcome, record it durably in the project note or ADR, remove its `NOW.md` row. Stops if an outcome is unevidenced. |
-| `/delegate [plan=· implement=· review=] <task>` | Run the delegation loop: a planner writes `docs/plans/<slug>.md`, an implementer executes it and appends a `## Result`, you verify the claims, a reviewer appends a `## Review`, then the outcome is recorded. Actors are chosen per run. |
-
-House defaults for `/delegate`: **plan `claude:opus` · implement `pi` · review `codex:sol`**; utility work goes to `codex:luna`, `claude:haiku`, or local `qwen3:8b`. Any role can be reassigned per run, and an omitted role is asked for rather than inferred.
-
-Claude Code and pi expose both as slash commands. Codex ships the skill; there, ask for the focus loop in prose.
+`NOW.md` is a focus board, not a task list or a log: it keeps only active work, a decision deadline, or a blocker that changes what happens next.
 
 ## Layout
 
 ```
-├── skills/vault/SKILL.md              # the skill (all three harnesses)
-├── commands/now.md, retire.md, delegate.md   # slash commands
-├── package.json                       # pi package manifest
-├── .claude-plugin/                    # Claude Code plugin + marketplace
-├── .codex-plugin/                     # Codex plugin
-└── .agents/plugins/marketplace.json   # Codex marketplace
+├── skills/vault/SKILL.md                    # the skill (all three harnesses)
+├── commands/now.md, retire.md, delegate.md  # slash commands
+├── package.json                             # pi package manifest
+├── .claude-plugin/                          # Claude Code plugin + marketplace
+├── .codex-plugin/                           # Codex plugin
+└── .agents/plugins/marketplace.json         # Codex marketplace
 ```
 
 ## Configuration
 
-The vault path (`~/Documents/windo-vault`) is written literally into `skills/vault/SKILL.md` and both commands. Fork the repo and replace it to point at your own vault.
+The vault path (`~/Documents/windo-vault`) is written literally into `skills/vault/SKILL.md` and the three commands. Fork the repo and replace it to point at your own vault.
 
 The package assumes the vault's layout: an `AI.md` entry point, a `NOW.md` focus board, `Home.md`, `Inbox.md`, project hubs, and `Meta/` notes. The vault's own `AGENTS.md` remains the authority on how its notes are edited.
+
+The delegation loop assumes the repository keeps plans in `docs/plans/`. Change the path in `commands/delegate.md` if yours differ.
+
+## Updating
+
+Each harness pins a ref, so an update means repointing it:
+
+```bash
+pi install git:github.com/hwindo/agent-vault@v0.3.0
+claude plugin update agent-vault@agent-vault          # after the marketplace refreshes
+codex plugin marketplace remove agent-vault           # Codex will not cross a ref in place
+codex plugin marketplace add hwindo/agent-vault --ref v0.3.0
+codex plugin add agent-vault@agent-vault
+```
+
+## Uninstalling
+
+```bash
+pi remove git:github.com/hwindo/agent-vault
+claude plugin uninstall agent-vault@agent-vault
+codex plugin remove agent-vault@agent-vault
+```
