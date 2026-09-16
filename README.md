@@ -166,7 +166,8 @@ Does a provider timeout discard the job, and what budget should a retry get?
 ## Result
 - `src/outbound/outbound.processor.ts` — classify, rethrow, discard on permanent
 - `src/outbound/outbound.processor.spec.ts` — 4 tests, passing
-- Commits: `a1b2c3d`, `d4e5f6a`
+- Commits: `a1b2c3d`, `d4e5f6a` — the review range is `a1b2c3d^..d4e5f6a`, since a
+  range excludes its own first commit
 - Could not verify: the retry path against real provider timings
 ```
 
@@ -174,7 +175,7 @@ Does a provider timeout discard the job, and what budget should a retry get?
 
 ```markdown
 ## Verified
-- `git diff a1b2c3d..d4e5f6a` — reviewed; scope matches the plan
+- `git diff a1b2c3d^..d4e5f6a` — reviewed; scope matches the plan
 - `npm test -- outbound.processor.spec.ts` — 4 passed
 - Retry path against real provider timings — not run
 ```
@@ -183,7 +184,7 @@ Only then hand Codex the same range:
 
 ```bash
 herdr agent start reviewer --kind codex --pane w1:p9 -- -m gpt-5.6-sol
-herdr agent prompt reviewer "Review a1b2c3d..d4e5f6a against docs/plans/outbound-export-retries.md, which now carries ## Result and ## Verified. Append ## Review with blocking findings only." --wait
+herdr agent prompt reviewer "Review a1b2c3d^..d4e5f6a against docs/plans/outbound-export-retries.md, which now carries ## Result and ## Verified. Append ## Review with blocking findings only." --wait
 ```
 
 **5. Close.** With no blocking findings, the plan stays in the repository, the vault records that retry classification became shared policy, and the affected `NOW.md` row gets its next outcome instead of its old one.
