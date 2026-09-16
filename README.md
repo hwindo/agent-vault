@@ -152,7 +152,7 @@ Does a provider timeout discard the job, and what budget should a retry get?
 ## Evidence
 - `src/outbound/outbound.processor.ts:88` — the catch logs and returns, so Bull
   records the job as complete
-- `docs/plans/qianyi-reliability.md` — the shared classifier calls timeouts transient
+- `docs/plans/qianyi-reliability.md:13` — the shared classifier treats HTTP 408/429/5xx and timeouts as transient
 
 ## Steps
 1. Rethrow transient provider failures so Bull retries — acceptance: a unit test
@@ -170,11 +170,20 @@ Does a provider timeout discard the job, and what budget should a retry get?
 - Could not verify: the retry path against real provider timings
 ```
 
-**4. Verify before spending a reviewer.** Read the diff, rerun the suite, then hand Codex the sha range:
+**4. Verify before spending a reviewer.** Read the diff, rerun the suite, then append `## Verified` to the plan — the reviewer must not receive a range that was never verified:
+
+```markdown
+## Verified
+- `git diff a1b2c3d..d4e5f6a` — reviewed; scope matches the plan
+- `npm test -- outbound.processor.spec.ts` — 4 passed
+- Retry path against real provider timings — not run
+```
+
+Only then hand Codex the same range:
 
 ```bash
 herdr agent start reviewer --kind codex --pane w1:p9 -- -m gpt-5.6-sol
-herdr agent prompt reviewer "Review a1b2c3d..d4e5f6a against docs/plans/outbound-export-retries.md. Append ## Review with blocking findings only." --wait
+herdr agent prompt reviewer "Review a1b2c3d..d4e5f6a against docs/plans/outbound-export-retries.md, which now carries ## Result and ## Verified. Append ## Review with blocking findings only." --wait
 ```
 
 **5. Close.** With no blocking findings, the plan stays in the repository, the vault records that retry classification became shared policy, and the affected `NOW.md` row gets its next outcome instead of its old one.
@@ -214,7 +223,7 @@ Loads when a session reads vault notes, asks what is in progress, records a deci
 
 ## Configuration
 
-The vault path (`~/Documents/windo-vault`) is written literally into `skills/vault/SKILL.md` and the four commands. Fork the repo and replace it to point at your own vault.
+The vault path (`~/Documents/windo-vault`) is written literally into `skills/vault/SKILL.md`, `commands/now.md:5`, and `commands/retire.md:5`. `commands/delegate.md` and `commands/verify.md` describe the vault without hardcoding the path, so they port to another vault unchanged. Fork the repo and replace the path in the first three to point at your own vault.
 
 The package assumes the vault's layout: an `AI.md` entry point, a `NOW.md` focus board, `Home.md`, `Inbox.md`, project hubs, and `Meta/` notes. The vault's own `AGENTS.md` remains the authority on how its notes are edited.
 
