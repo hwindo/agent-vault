@@ -2,7 +2,9 @@
 description: Run plan → implement → review with the actors you choose, then verify and close the loop
 argument-hint: "[plan=<actor> implement=<actor> review=<actor>] <task>"
 ---
-Run the delegation loop for: ${@:-the task described above}
+Run the delegation loop for: $ARGUMENTS
+
+With no task given, ask for one before starting.
 
 ## Choose the actors
 
@@ -21,9 +23,23 @@ House defaults: **plan `claude:opus` · implement `pi` · review `codex:sol`**. 
 
 1. **Plan** — the planner writes `docs/plans/<slug>.md`: the question, evidence inspected, working assumptions, rejected paths, the decision still needed, and a bounded step list where each step names its acceptance check. It writes no code.
 2. **Implement** — hand the implementer only the plan path, plus the contract: commit small and feature-scoped, never push, then append `## Result` to the plan — what changed, commit shas, tests run, and what it could not do.
-3. **Verify** — check the Result against the tree yourself before spending a reviewer: `git log`, the diff, and rerun the tests. A delegate's claim is not evidence.
+3. **Verify** — check the Result against the tree yourself before spending a reviewer: `git log`, the diff, and rerun the tests. A delegate's claim is not evidence. Append `## Verified` to the plan with the exact commands, files, and runtime or UI checks that passed. If something could not be checked, record it explicitly instead of calling the work verified.
 4. **Review** — hand the reviewer the plan path and the sha range. It appends `## Review`: blocking findings only, each with file and line.
 5. **Close** — a blocking finding returns to step 2. Once clean, record the outcome by the `vault` rules: the plan file is the repository's copy, the vault gets the rationale, and any active `NOW.md` row is updated or retired.
+
+## Completion invariant
+
+An implementer's `## Result` is a report, not proof. The delegation is not complete until the orchestrating session has independently verified the tree and appended:
+
+```markdown
+## Verified
+- `git diff <base>..<head>` — reviewed; scope matches the plan
+- `<test/build command>` — passed
+- `<runtime, integration, or UI check>` — passed, or explicitly not run
+- Remaining unverified: <honest gap, or none>
+```
+
+The reviewer must receive the verified sha range. A green test suite that was not rerun against the final tree, or a plan that only repeats the implementer's claim, does not satisfy this invariant.
 
 ## Delegating
 

@@ -8,15 +8,22 @@ The vault holds the **why**: intent, rejected options, unresolved questions, tra
 
 ```bash
 # pi
-pi install git:github.com/hwindo/agent-vault@v0.2.0
+pi install git:github.com/hwindo/agent-vault@v0.3.0
 
 # Claude Code
 claude plugin marketplace add hwindo/agent-vault
 claude plugin install agent-vault@agent-vault
 
 # Codex
-codex plugin marketplace add hwindo/agent-vault --ref v0.2.0
+codex plugin marketplace add hwindo/agent-vault --ref v0.3.0
 codex plugin add agent-vault@agent-vault
+
+# opencode — no package manager for skills, so link a checkout
+git clone https://github.com/hwindo/agent-vault ~/Developments/agent-vault
+ln -sfn ~/Developments/agent-vault/skills/vault ~/.config/opencode/skills/vault
+for c in now retire delegate verify; do
+  ln -sfn ~/Developments/agent-vault/commands/$c.md ~/.config/opencode/commands/$c.md
+done
 ```
 
 Restart the harness afterwards (Claude Code requires it).
@@ -28,9 +35,10 @@ Restart the harness afterwards (Claude Code requires it).
 | `vault` skill | Automatically, when a session touches the vault |
 | `/now [thread]` | When you invoke it |
 | `/retire <thread>` | When you invoke it |
+| `/verify [plan or task]` | When an agent has finished work and evidence still needs checking |
 | `/delegate [plan=· implement=· review=] <task>` | When you invoke it |
 
-Codex ships the skill; the three commands are Claude Code and pi slash commands. In Codex, describe what you want and the same instructions come from the skill.
+Codex ships the skill; the commands are Claude Code, pi, and opencode slash commands. In Codex, describe what you want and the same instructions come from the skill.
 
 ## Prerequisites
 
@@ -92,6 +100,12 @@ What changed, commit shas, tests run, what could not be done.
 
 ## Review        ← appended by the reviewer
 Blocking findings only, each with file and line.
+
+## Verified     ← appended by the orchestrating session
+- `git diff <base>..<head>` — reviewed; scope matches the plan
+- `<test/build command>` — passed
+- `<runtime, integration, or UI check>` — passed, or explicitly not run
+- Remaining unverified: <honest gap, or none>
 ```
 
 **Commit authority:** the implementer commits small and feature-scoped and **never pushes**, so the reviewer and the orchestrator can check the same sha range independently.
@@ -100,7 +114,7 @@ Blocking findings only, each with file and line.
 
 1. **Plan** — the planner writes the plan file and writes no code.
 2. **Implement** — the implementer receives only the plan path, then appends `## Result`.
-3. **Verify** — the orchestrating session checks the Result against the tree (`git log`, the diff, rerun the tests) *before* spending a reviewer. A delegate's claim is not evidence.
+3. **Verify** — the orchestrating session checks the Result against the tree (`git log`, the diff, rerun the tests) *before* spending a reviewer, then appends `## Verified` with exact evidence. A delegate's claim is not evidence.
 4. **Review** — the reviewer receives the plan path and the sha range, and appends `## Review`.
 5. **Close** — a blocking finding returns to step 2. Once clean, the outcome is recorded by the vault rules: the plan file stays in the repository, the vault gets the rationale, and any active `NOW.md` row is updated or retired.
 
@@ -189,7 +203,8 @@ Loads when a session reads vault notes, asks what is in progress, records a deci
 
 ```
 ├── skills/vault/SKILL.md                    # the skill (all three harnesses)
-├── commands/now.md, retire.md, delegate.md  # slash commands
+├── commands/now.md, retire.md, delegate.md, verify.md  # slash commands
+├── docs/plans/                              # plan files the loop writes
 ├── package.json                             # pi package manifest
 ├── .claude-plugin/                          # Claude Code plugin + marketplace
 ├── .codex-plugin/                           # Codex plugin
