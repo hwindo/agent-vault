@@ -1,6 +1,6 @@
 {
   "name": "agent-vault",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Obsidian knowledge vault workflow: a vault navigation skill and focus-board commands that keep the vault's rationale and the repositories' implementation in sync.",
   "author": {
     "name": "hwindo"

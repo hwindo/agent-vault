@@ -1,7 +1,7 @@
 {
   "name": "agent-vault",
-  "version": "0.2.0",
-  "description": "Obsidian knowledge vault workflow and plan/implement/review delegation loop for pi, Claude Code, and Codex.",
+  "version": "0.3.0",
+  "description": "Obsidian knowledge vault workflow and plan/implement/review delegation loop for pi, Claude Code, Codex, and opencode.",
   "keywords": ["pi-package", "obsidian", "vault", "agent-skills"],
   "pi": {
     "skills": ["./skills"],
