@@ -1,5 +1,5 @@
 ---
-description: Run plan → implement → review with the actors you choose, then verify and close the loop
+description: Run plan → implement → verify → review with the actors you choose, then close the loop
 argument-hint: "[plan=<actor> implement=<actor> review=<actor>] <task>"
 ---
 Run the delegation loop for: $ARGUMENTS
@@ -21,7 +21,7 @@ House defaults: **plan `claude:opus` · implement `pi` · review `codex:sol`**. 
 
 ## The loop
 
-1. **Plan** — the planner writes `docs/plans/<slug>.md`: the question, evidence inspected, working assumptions, rejected paths, the decision still needed, and a bounded step list where each step names its acceptance check. It writes no code.
+1. **Plan** — the planner writes `docs/plans/<slug>.md`: the question, evidence inspected **with file and line numbers**, working assumptions, rejected paths, the decision still needed, and a bounded step list where each step names its acceptance check. It writes no code. Evidence without an anchor is not evidence; the implementer must never have to re-derive the exploration.
 2. **Implement** — hand the implementer only the plan path, plus the contract: commit small and feature-scoped, never push, then append `## Result` to the plan — what changed, commit shas, tests run, and what it could not do.
 3. **Verify** — check the Result against the tree yourself before spending a reviewer: `git log`, the diff, and rerun the tests. A delegate's claim is not evidence. Append `## Verified` to the plan with the exact commands, files, and runtime or UI checks that passed. If something could not be checked, record it explicitly instead of calling the work verified.
 4. **Review** — hand the reviewer the plan path and the sha range. It appends `## Review`: blocking findings only, each with file and line.

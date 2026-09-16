@@ -1,6 +1,6 @@
 # agent-vault
 
-A knowledge-vault workflow for coding agents — **pi**, **Claude Code**, and **Codex** — plus a delegation loop that splits a task into plan, implement, and review.
+A knowledge-vault workflow for coding agents — **pi**, **Claude Code**, **Codex**, and **opencode** — plus a delegation loop that splits a task into plan, implement, verify, and review.
 
 The vault holds the **why**: intent, rejected options, unresolved questions, traps already paid for. The repository holds the **how**. This package teaches an agent to read the vault in the right order, keep its focus board honest, and hand work between models you choose per run.
 
@@ -19,7 +19,8 @@ codex plugin marketplace add hwindo/agent-vault --ref v0.3.0
 codex plugin add agent-vault@agent-vault
 
 # opencode — no package manager for skills, so link a checkout
-git clone https://github.com/hwindo/agent-vault ~/Developments/agent-vault
+git clone https://github.com/hwindo/agent-vault ~/Developments/agent-vault  # skip if it exists
+mkdir -p ~/.config/opencode/skills ~/.config/opencode/commands
 ln -sfn ~/Developments/agent-vault/skills/vault ~/.config/opencode/skills/vault
 for c in now retire delegate verify; do
   ln -sfn ~/Developments/agent-vault/commands/$c.md ~/.config/opencode/commands/$c.md
@@ -98,14 +99,14 @@ What is being taken on faith, and what was considered and dropped.
 ## Result        ← appended by the implementer
 What changed, commit shas, tests run, what could not be done.
 
-## Review        ← appended by the reviewer
-Blocking findings only, each with file and line.
-
-## Verified     ← appended by the orchestrating session
+## Verified      ← appended by the orchestrating session, before any reviewer sees the range
 - `git diff <base>..<head>` — reviewed; scope matches the plan
 - `<test/build command>` — passed
 - `<runtime, integration, or UI check>` — passed, or explicitly not run
 - Remaining unverified: <honest gap, or none>
+
+## Review        ← appended by the reviewer
+Blocking findings only, each with file and line.
 ```
 
 **Commit authority:** the implementer commits small and feature-scoped and **never pushes**, so the reviewer and the orchestrator can check the same sha range independently.
@@ -202,7 +203,7 @@ Loads when a session reads vault notes, asks what is in progress, records a deci
 ## Layout
 
 ```
-├── skills/vault/SKILL.md                    # the skill (all three harnesses)
+├── skills/vault/SKILL.md                    # the skill (all four harnesses)
 ├── commands/now.md, retire.md, delegate.md, verify.md  # slash commands
 ├── docs/plans/                              # plan files the loop writes
 ├── package.json                             # pi package manifest
@@ -213,7 +214,7 @@ Loads when a session reads vault notes, asks what is in progress, records a deci
 
 ## Configuration
 
-The vault path (`~/Documents/windo-vault`) is written literally into `skills/vault/SKILL.md` and the three commands. Fork the repo and replace it to point at your own vault.
+The vault path (`~/Documents/windo-vault`) is written literally into `skills/vault/SKILL.md` and the four commands. Fork the repo and replace it to point at your own vault.
 
 The package assumes the vault's layout: an `AI.md` entry point, a `NOW.md` focus board, `Home.md`, `Inbox.md`, project hubs, and `Meta/` notes. The vault's own `AGENTS.md` remains the authority on how its notes are edited.
 
@@ -221,7 +222,7 @@ The delegation loop assumes the repository keeps plans in `docs/plans/`. Change 
 
 ## Updating
 
-Each harness pins a ref, so an update means repointing it:
+pi, Claude Code, and Codex pin a ref, so an update means repointing it; opencode follows the checkout it is linked to, so it moves on `git pull`:
 
 ```bash
 pi install git:github.com/hwindo/agent-vault@v0.3.0
