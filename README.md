@@ -71,7 +71,7 @@ Assign a role per run; an omitted role is **asked for**, never inferred from tas
 | `pi` | This session |
 | `pi:<model>` | A pi subagent on that model, if the subagent extension is installed |
 
-**House defaults:** plan `claude:opus` · implement `pi` · review `codex:sol`.
+**House defaults:** plan `claude:opus` · implement `claude:sonnet` · review `codex:sol`. An Opus session plans itself rather than starting a fresh Opus pane.
 
 **Utility work** — summarising, renaming, extraction, boilerplate, commit messages — goes to `codex:luna`, `claude:haiku`, or a local model, and never occupies a loop role.
 

@@ -12,12 +12,12 @@ Parse `plan=`, `implement=`, `review=` from the arguments. Omit a role and ask f
 
 | Actor | Runs as |
 |---|---|
-| `codex:sol`, `codex:luna` | Codex in a sibling herdr pane: `--kind codex -- -m <model>` |
+| `codex:sol`, `codex:luna` | Codex in a sibling herdr pane: `--kind codex -- -m gpt-6.2-sol` (or `gpt-6-luna`); a bare `sol` is not a valid model id |
 | `claude:opus`, `claude:sonnet`, `claude:haiku` | Claude Code in a sibling herdr pane: `--kind claude -- --model <alias>` |
 | `pi` | this session |
 | `pi:<model>` | a pi subagent on that model, if the subagent extension is installed; otherwise say so and offer to install it |
 
-House defaults: **plan `claude:opus` · implement `pi` · review `codex:sol`**. Utility work — summarising, renaming, extraction, boilerplate, commit messages — goes to `codex:luna`, `claude:haiku`, or local `qwen3:8b`, and never occupies a loop role.
+House defaults: **plan `claude:opus` · implement `claude:sonnet` · review `codex:sol`**. When this session is already running Opus, it is the planner itself (`pi`) instead of starting a fresh Opus pane. Utility work — summarising, renaming, extraction, boilerplate, commit messages — goes to `codex:luna`, `claude:haiku`, or local `qwen3:8b`, and never occupies a loop role.
 
 ## The loop
 
